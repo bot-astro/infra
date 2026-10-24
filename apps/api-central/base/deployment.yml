@@ -31,6 +31,15 @@ spec:
             - secretRef:
                 name: api-central-config
           env:
+            - name: OTEL_ENABLED
+              value: "true"
+            # Prometheus (kube-prometheus-stack) OTLP receiver, the app appends /v1/metrics
+            - name: OTEL_ENDPOINT
+              value: http://kube-prometheus-stack-prometheus.monitoring:9090/api/v1/otlp
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: POD_HOSTNAME
               valueFrom:
                 fieldRef:

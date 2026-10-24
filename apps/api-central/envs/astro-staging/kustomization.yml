@@ -6,7 +6,6 @@ namespace: astro-staging
 resources:
   - ../../base
   - infisical-secret.yml
-  - docker-config-secret.yml
 
 patches:
   - path: version.yml

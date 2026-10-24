@@ -87,7 +87,7 @@ Prod values were copied from the old `astro` namespace ConfigMaps; staging has n
 **`prod` (`astro`)**
 - All keys set (`FRONTEND_BASE_URL`, `CA__SESSION_COOKIE_DOMAIN`, `SB__DISCORD_APPLICATION_ACTIVITY_*`).
 - Check: `DISCORD_OAUTH_REDIRECT_URI` is set to `https://api.astro-bot.space/v2/auth/discord/callback` (new API), and that URL must be registered in the Discord developer portal.
-- Check: `BOT__BIGQUERY_DATASET_NAME` is `astro_bot` (the existing dataset). `terraform/gcp` would create `astro_prod` and overwrite this secret: either set `dataset_id = "astro_bot"` for prod and import the dataset, or accept a new dataset.
+- `BOT__BIGQUERY_DATASET_NAME` is `astro_bot`: prod adopts the existing dataset in `terraform/gcp` via `imports.tf` (data untouched), staging gets `astro_staging`.
 - Check: `MONGODB_URI` is the Atlas string from the old config, `REDIS_*` points to `redis-master.databases.svc.cluster.local` (password taken from the old URI).
 
 **`staging` (`astro-staging`)**: everything below is missing.

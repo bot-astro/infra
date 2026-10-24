@@ -40,42 +40,55 @@ provider "infisical" {
 }
 
 locals {
+  # prod is the dataset that already existed (astro_bot, holds the historical analytics): imports.tf brings it and its
+  # tables under terraform without touching the data. Tables have deletion_protection and prevent_destroy.
   envs = {
-    prod    = { infisical_env = "prod", dataset_id = "astro_prod" }
+    prod    = { infisical_env = "prod", dataset_id = "astro_bot" }
     staging = { infisical_env = "staging", dataset_id = "astro_staging" }
   }
 
-  # Column names are the field names of the events in services/bot/.../models/analytics
-  # (the BigQuery client writes them as they are, camelCase)
+  # Same schema as the tables in astro_bot (snake_case, the bot writes with the application JSON mapper)
   tables = {
     TEMPORARY_VC_GENERATION = [
-      { name = "guildId", type = "INTEGER" },
-      { name = "userId", type = "INTEGER" },
-      { name = "generatorId", type = "INTEGER" },
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "user_id", type = "NUMERIC" },
+      { name = "generator_id", type = "NUMERIC" },
       { name = "timestamp", type = "TIMESTAMP" },
     ]
     SLASH_COMMAND_INVOCATION = [
       { name = "name", type = "STRING" },
-      { name = "guildId", type = "INTEGER" },
-      { name = "channelId", type = "INTEGER" },
-      { name = "userId", type = "INTEGER" },
-      { name = "mainOptionName", type = "STRING", mode = "NULLABLE" },
-      { name = "mainOptionValue", type = "STRING", mode = "NULLABLE" },
-      { name = "rawOptions", type = "STRING", mode = "NULLABLE" },
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "channel_id", type = "NUMERIC" },
+      { name = "user_id", type = "NUMERIC" },
+      { name = "main_option_name", type = "STRING", mode = "NULLABLE" },
+      { name = "main_option_value", type = "STRING", mode = "NULLABLE" },
+      { name = "raw_options", type = "STRING", mode = "NULLABLE" },
       { name = "timestamp", type = "TIMESTAMP" },
     ]
     CONNECTION_INVOCATION = [
-      { name = "guildId", type = "INTEGER" },
-      { name = "userId", type = "INTEGER" },
-      { name = "connectionId", type = "INTEGER" },
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "user_id", type = "NUMERIC" },
+      { name = "connection_id", type = "NUMERIC" },
       { name = "timestamp", type = "TIMESTAMP" },
     ]
     GUILD_EVENT = [
-      { name = "guildId", type = "INTEGER" },
-      { name = "usersCount", type = "INTEGER" },
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "users_count", type = "INTEGER" },
       { name = "action", type = "STRING" }, # JOINED | KICKED
       { name = "timestamp", type = "TIMESTAMP" },
     ]
+    # legacy table, the new bot does not write it, kept because prod has it (and its data)
+    GUILD_SNAPSHOT = [
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "guild_name", type = "STRING" },
+      { name = "member_count", type = "INTEGER" },
+      { name = "shard_id", type = "INTEGER" },
+      { name = "timestamp", type = "TIMESTAMP" },
+    ]
+  }
+
+  clustering = {
+    GUILD_SNAPSHOT = ["guild_id"]
   }
 
   env_tables = merge([
@@ -90,6 +103,10 @@ resource "google_bigquery_dataset" "analytics" {
 
   dataset_id = each.value.dataset_id
   location   = var.gcp_location
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_bigquery_table" "analytics" {
@@ -98,6 +115,7 @@ resource "google_bigquery_table" "analytics" {
   dataset_id          = google_bigquery_dataset.analytics[each.value.env].dataset_id
   table_id            = each.value.table
   deletion_protection = true
+  clustering          = lookup(local.clustering, each.value.table, null)
 
   require_partition_filter = true
   time_partitioning {
@@ -112,6 +130,10 @@ resource "google_bigquery_table" "analytics" {
       mode = lookup(column, "mode", "REQUIRED")
     }
   ])
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_service_account" "bot" {
@@ -124,7 +146,7 @@ resource "google_service_account" "bot" {
 resource "google_bigquery_dataset_iam_member" "bot_data_editor" {
   for_each = local.envs
 
-  dataset_id = google_bigquery_dataset.analytics[each.key].dataset_id
+  dataset_id = each.value.dataset_id
   role       = "roles/bigquery.dataEditor"
   member     = "serviceAccount:${google_service_account.bot[each.key].email}"
 }
@@ -146,7 +168,7 @@ resource "google_service_account_key" "bot" {
 locals {
   secrets = merge([
     for env, cfg in local.envs : {
-      "${env}/BOT__BIGQUERY_DATASET_NAME" = { env = cfg.infisical_env, name = "BOT__BIGQUERY_DATASET_NAME", value = google_bigquery_dataset.analytics[env].dataset_id }
+      "${env}/BOT__BIGQUERY_DATASET_NAME" = { env = cfg.infisical_env, name = "BOT__BIGQUERY_DATASET_NAME", value = cfg.dataset_id }
       # service account key, mounted as a file by the bot (GOOGLE_APPLICATION_CREDENTIALS)
       "${env}/BOT__GCP_CREDENTIALS_JSON" = { env = cfg.infisical_env, name = "BOT__GCP_CREDENTIALS_JSON", value = base64decode(google_service_account_key.bot[env].private_key) }
     }

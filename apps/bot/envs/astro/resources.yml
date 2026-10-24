@@ -9,7 +9,7 @@ spec:
         - name: bot
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
+              cpu: "1"
+              memory: 5Gi
             limits:
-              memory: 3Gi
+              memory: 5Gi
