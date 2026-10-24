@@ -1,0 +1,6 @@
+apiVersion: secrets.infisical.com/v1beta1
+kind: InfisicalConnection
+metadata:
+  name: infisical-connection
+spec:
+  address: https://app.infisical.com

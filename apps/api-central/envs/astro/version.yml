@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-central
+spec:
+  template:
+    spec:
+      containers:
+        - name: api-central
+          image: ghcr.io/bot-astro/api-central:6.0.0

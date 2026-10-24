@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-central
+spec:
+  tls:
+    - hosts:
+        - api.astro-bot.space
+      secretName: api-central-tls
+  rules:
+    - host: api.astro-bot.space

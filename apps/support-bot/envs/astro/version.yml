@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: support-bot
+spec:
+  template:
+    spec:
+      containers:
+        - name: support-bot
+          image: ghcr.io/bot-astro/support-bot:3.0.0

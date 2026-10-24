@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: support-bot
+  labels:
+    app: support-bot
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  serviceName: support-bot
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: support-bot
+  template:
+    metadata:
+      labels:
+        app: support-bot
+    spec:
+      nodeSelector:
+        gport.giuliopime.dev/agent: as-cruiser
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+        - name: docker-registry
+      containers:
+        - name: support-bot
+          image: ghcr.io/bot-astro/support-bot:latest
+          ports:
+            - name: http
+              containerPort: 9002
+            - name: management
+              containerPort: 9102
+          envFrom:
+            - secretRef:
+                name: support-bot-config
+          env:
+            - name: POD_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_ORDINAL
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9102
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9102
+            timeoutSeconds: 5
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 10

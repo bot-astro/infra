@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: support-bot
+spec:
+  tls:
+    - hosts:
+        - support-bot-staging.astro-bot.space
+      secretName: support-bot-tls
+  rules:
+    - host: support-bot-staging.astro-bot.space

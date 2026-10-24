@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: entitlements-expiration-job
+  labels:
+    app: entitlements-expiration-job
+spec:
+  schedule: "0 1 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 4
+      template:
+        spec:
+          nodeSelector:
+            gport.giuliopime.dev/agent: as-cruiser
+          restartPolicy: OnFailure
+          imagePullSecrets:
+            - name: docker-registry
+          containers:
+            - name: entitlements-expiration-job
+              image: ghcr.io/bot-astro/entitlements-expiration-job:latest
+              envFrom:
+                - secretRef:
+                    name: entitlements-expiration-job-config

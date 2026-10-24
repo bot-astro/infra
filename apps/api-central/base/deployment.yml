@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-central
+  labels:
+    app: api-central
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  selector:
+    matchLabels:
+      app: api-central
+  template:
+    metadata:
+      labels:
+        app: api-central
+    spec:
+      nodeSelector:
+        gport.giuliopime.dev/agent: as-cruiser
+      imagePullSecrets:
+        - name: docker-registry
+      containers:
+        - name: api-central
+          image: ghcr.io/bot-astro/api-central:latest
+          ports:
+            - name: http
+              containerPort: 9001
+            - name: management
+              containerPort: 9101
+          envFrom:
+            - secretRef:
+                name: api-central-config
+          env:
+            - name: POD_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_ORDINAL
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9101
+            timeoutSeconds: 5
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9101
+            timeoutSeconds: 5
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            failureThreshold: 10

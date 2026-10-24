@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bot
+  labels:
+    app: bot
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  serviceName: bot
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: bot
+  template:
+    metadata:
+      labels:
+        app: bot
+    spec:
+      nodeSelector:
+        gport.giuliopime.dev/agent: as-cruiser
+      terminationGracePeriodSeconds: 30
+      imagePullSecrets:
+        - name: docker-registry
+      containers:
+        - name: bot
+          image: ghcr.io/bot-astro/bot:latest
+          ports:
+            - name: http
+              containerPort: 9000
+            - name: management
+              containerPort: 9100
+          envFrom:
+            - secretRef:
+                name: bot-config
+          env:
+            - name: BOT__POD_HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: BOT__POD_ORDINAL
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/astro-bot/secrets/key.json
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9100
+            timeoutSeconds: 30
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            failureThreshold: 120
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9100
+            timeoutSeconds: 30
+            initialDelaySeconds: 360
+            periodSeconds: 60
+            failureThreshold: 10
+          volumeMounts:
+            - name: gcp-bigquery-creds
+              mountPath: /etc/astro-bot/secrets
+              readOnly: true
+      volumes:
+        - name: gcp-bigquery-creds
+          secret:
+            secretName: bot-config
+            items:
+              - key: BOT__GCP_CREDENTIALS_JSON
+                path: key.json

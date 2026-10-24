@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: entitlements-expiration-job
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: entitlements-expiration-job
+              image: ghcr.io/bot-astro/entitlements-expiration-job:3.0.0

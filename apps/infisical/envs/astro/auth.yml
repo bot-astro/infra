@@ -1,0 +1,17 @@
+apiVersion: secrets.infisical.com/v1beta1
+kind: InfisicalAuth
+metadata:
+  name: infisical-auth
+spec:
+  infisicalConnectionRef:
+    name: infisical-connection
+    namespace: astro
+  method: kubernetes
+  kubernetes:
+    identityIdRef:
+      name: infisical-kubernetes-credentials
+      namespace: astro
+      key: identityId
+    serviceAccountRef:
+      name: infisical-service-account
+      namespace: astro

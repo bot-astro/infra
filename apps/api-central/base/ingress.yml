@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-central
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - placeholder.astro-bot.space
+      secretName: api-central-tls
+  rules:
+    - host: placeholder.astro-bot.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-central
+                port:
+                  number: 9001

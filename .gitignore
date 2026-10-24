@@ -1,0 +1,13 @@
+.idea
+.DS_Store
+
+# unsealed secrets (only *.template.yml and *-sealed.yml are committed)
+apps/**/secrets/*.yml
+!apps/**/secrets/*.template.yml
+
+# terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.template
