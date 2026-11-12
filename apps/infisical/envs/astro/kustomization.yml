@@ -7,3 +7,4 @@ resources:
   - connection.yml
   - service-account.yml
   - auth.yml
+  - infisical-kubernetes-credentials-secret-sealed.yml
