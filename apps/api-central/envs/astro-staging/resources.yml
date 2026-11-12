@@ -12,7 +12,6 @@ spec:
             - name: MALLOC_ARENA_MAX
               value: "2"
           resources:
-            # no cpu limit on purpose: startup needs a burst of cpu that the node can share
             requests:
               cpu: 100m
               memory: 640Mi

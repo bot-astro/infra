@@ -48,7 +48,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          # gives the app time to boot before liveness and readiness start counting failures
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
