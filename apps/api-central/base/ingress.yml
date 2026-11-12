@@ -4,6 +4,8 @@ metadata:
   name: api-central
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod-dns
+    # ingress-nginx defaults to 1m, the api accepts media uploads up to 5MB (10MB request)
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
 spec:
   ingressClassName: nginx
   tls:
