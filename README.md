@@ -5,7 +5,7 @@ The IaC is in a personal repository: [gport](https://github.com/Giuliopime/gport
 
 #### ArgoCD
 ArgoCD watches `apps/*/envs/*` and deploys each folder in the namespace named after the env (`astro`, `astro-staging`).
-The cluster itself (Hetzner, ArgoCD, sealed-secrets, nginx, cert-manager) lives in `Giuliopime/gport`. See `PLAN.md` for the design.
+The cluster itself (Hetzner, ArgoCD, sealed-secrets, nginx, cert-manager) lives in `Giuliopime/gport`.
 
 
 #### secrets management
