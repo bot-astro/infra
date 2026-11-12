@@ -93,9 +93,9 @@ resource "cloudflare_api_token" "r2" {
     permission_groups = [
       { id = var.r2_bucket_item_write_permission_group_id },
     ]
-    resources = {
+    resources = jsonencode({
       "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${cloudflare_r2_bucket.media[each.key].name}" = "*"
-    }
+    })
   }]
 }
 
