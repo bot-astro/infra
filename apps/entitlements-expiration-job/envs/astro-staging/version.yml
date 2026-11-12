@@ -9,4 +9,4 @@ spec:
         spec:
           containers:
             - name: entitlements-expiration-job
-              image: ghcr.io/bot-astro/entitlements-expiration-job:1da764ecfe9067050fc4caa715358ee49438e374
+              image: ghcr.io/bot-astro/entitlements-expiration-job:a69455877f43d8c3d0a0e1e2ca4f976af9f3ba72
