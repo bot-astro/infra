@@ -12,9 +12,6 @@ spec:
         revision: HEAD
         directories:
           - path: apps/*/envs/*
-          # prod stays excluded until the cutover (docs/deploy-hyperion.md D4)
-          - path: apps/*/envs/astro
-            exclude: true
   template:
     metadata:
       # apps/<app>/envs/<env> -> <app>-<env>, deployed in the <env> namespace
