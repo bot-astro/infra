@@ -3,4 +3,4 @@ kind: StatefulSet
 metadata:
   name: support-bot
 spec:
-  replicas: 1
+  replicas: 0

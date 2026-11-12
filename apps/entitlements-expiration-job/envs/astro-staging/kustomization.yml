@@ -10,3 +10,4 @@ resources:
 patches:
   - path: version.yml
   - path: resources.yml
+  - path: suspend.yml

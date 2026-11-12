@@ -1,0 +1,6 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: entitlements-expiration-job
+spec:
+  suspend: true
