@@ -48,6 +48,14 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+          # gives the app time to boot before liveness and readiness start counting failures
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9101
+            timeoutSeconds: 5
+            periodSeconds: 2
+            failureThreshold: 30
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
