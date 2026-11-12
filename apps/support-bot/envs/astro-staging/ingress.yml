@@ -9,3 +9,12 @@ spec:
       secretName: support-bot-tls
   rules:
     - host: support-bot-staging.astro-bot.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: support-bot
+                port:
+                  number: 9002

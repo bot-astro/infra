@@ -9,3 +9,12 @@ spec:
       secretName: api-central-tls
   rules:
     - host: api-staging.astro-bot.space
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-central
+                port:
+                  number: 9001
