@@ -7,9 +7,13 @@ spec:
     spec:
       containers:
         - name: api-central
+          env:
+            # glibc creates up to 8 malloc arenas per core, and the JVM sees every core of the node (no cpu limit)
+            - name: MALLOC_ARENA_MAX
+              value: "2"
           resources:
             requests:
-              cpu: 30m
-              memory: 400Mi
+              cpu: 100m
+              memory: 640Mi
             limits:
-              memory: 400Mi
+              memory: 640Mi
