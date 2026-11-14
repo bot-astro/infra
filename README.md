@@ -10,6 +10,12 @@ Staging is kept at 0 replicas to save money, to use it set `replicas: 1` (and `s
 The cluster itself (Hetzner, ArgoCD, sealed-secrets, nginx, cert-manager) lives in `Giuliopime/gport`.
 
 
+#### CPU requests and limits
+Pods set a CPU **request** but deliberately **no CPU limit**.  
+On startup every pod needs a lot of CPU for a short time (class loading, Spring context, shard login), then it drops to a very small usage. A limit would throttle that burst and make startups (and probe failures) much slower, while with only a request the idle CPU of the node is shared between pods.  
+Memory is the opposite: request and limit are equal, since memory can't be shared or throttled.  
+Side effect: without a limit, the JVM sees all the cores of the node (JDK 19+ ignores the request), so it would size GC, JIT and Netty threads and glibc malloc arenas for e.g. 16 cores. The services compensate with `-XX:ActiveProcessorCount` and `MALLOC_ARENA_MAX=2`, set in the Gradle config of the `astro` repo (`service-conventions.gradle.kts` and each service's `build.gradle.kts`). Don't add a CPU limit to fix this, change those flags.
+
 #### secrets management
 Configs and secrets of the apps are in [Infisical](https://infisical.com), the Infisical operator syncs them in the cluster (see the `infisical-secret.yml` files).  
 The few secrets needed to bootstrap cannot be commited to git, for this reason I use [sealed secrets](https://github.com/bitnami-labs/sealed-secrets)
