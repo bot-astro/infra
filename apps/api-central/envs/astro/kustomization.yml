@@ -6,9 +6,11 @@ namespace: astro
 resources:
   - ../../base
   - infisical-secret.yml
+  - pdb.yml
 
 patches:
   - path: version.yml
   - path: resources.yml
   - path: replicas.yml
   - path: ingress.yml
+  - path: spread.yml
