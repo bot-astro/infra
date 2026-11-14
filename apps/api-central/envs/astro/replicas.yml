@@ -3,4 +3,4 @@ kind: Deployment
 metadata:
   name: api-central
 spec:
-  replicas: 3
+  replicas: 2
