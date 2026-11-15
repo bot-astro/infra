@@ -460,7 +460,7 @@
     {
       "id": 11,
       "type": "row",
-      "title": "JVM (bot metrics mix all pods until pod labels are promoted, see README)",
+      "title": "JVM (bot JVM metrics mix all pods, see README)",
       "collapsed": false,
       "gridPos": {
         "x": 0,
