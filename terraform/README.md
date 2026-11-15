@@ -9,11 +9,12 @@ Two independent root modules, each with its own state in the R2 bucket `astro-te
 
 ## Usage
 1. Once, by hand: create the R2 bucket `astro-terraform-state` and an R2 API token (object read/write on it).
-2. `cp backend.hcl.template backend.hcl`, fill in the account id. `export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...` with the token's S3 credentials.
+2. `cp backend.hcl.template backend.hcl`, fill in the account id. Store the token's S3 credentials in Infisical, once: `infisical secrets folders create --env=prod --path=/ --name=terraform`, then `infisical secrets set --env=prod --path=/terraform AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=...`.
 3. In each module (`cloudflare` and `gcp`): create `terraform.tfvars` from `variables.tf` (gitignored), then
    ```shell
-   terraform init -backend-config=../backend.hcl
-   terraform plan
-   terraform apply
+   ../../scripts/terraform.sh <module> init -backend-config=../backend.hcl
+   ../../scripts/terraform.sh <module> plan
+   ../../scripts/terraform.sh <module> apply
    ```
+   The script injects the credentials from Infisical, so nothing has to be exported. `backend.hcl` and `terraform.tfvars` are gitignored: run it from the main checkout, or copy them into a worktree.
 `infisical_client_id/secret` are a universal-auth machine identity with write access to the project. The Infisical environments `staging` and `prod` already exist.
