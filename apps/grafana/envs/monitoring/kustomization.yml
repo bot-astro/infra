@@ -17,18 +17,24 @@ configMapGenerator:
     options:
       labels:
         grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Astro
   - name: grafana-dashboard-astro-bot
     files:
       - dashboards/astro-bot.json
     options:
       labels:
         grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Astro
   - name: grafana-dashboard-astro-resources
     files:
       - dashboards/astro-resources.json
     options:
       labels:
         grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Astro
   - name: grafana-alerting-astro
     files:
       - alerting.yml
