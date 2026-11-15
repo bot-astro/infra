@@ -528,3 +528,175 @@ groups:
                     type: gt
                     params:
                       - 0
+      - uid: astro-vc-creation-failing
+        title: Temporary VC creation failing
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: Temporary VC creation is failing
+          description: More than 5% of the temporary VC creations failed with an unexpected error for 10 minutes ({{ $values.B.Value }}). Guilds are not getting their channels.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(increase(astro_vc_created_total{outcome="failed"}[10m])) / sum(increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 0.05 and sum(increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 20
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-vc-creation-slow
+        title: Temporary VC creation slow
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: Temporary VC creation p95 above 5s
+          description: p95 of the temporary VC creation time has been above 5 seconds for 10 minutes ({{ $values.B.Value }}s). Usually Discord API latency or rate limits.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: histogram_quantile(0.95, sum by (le) (rate(astro_vc_create_duration_seconds_bucket[5m]))) > 5 and sum(rate(astro_vc_created_total{outcome="created"}[5m])) > 0.02
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-discord-429-spike
+        title: Discord 429 spike
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: Discord is rate limiting the bot
+          description: More than 60 requests per minute got a 429 from Discord for 5 minutes ({{ $values.B.Value }}/s). See the rate limited panel of the Bot dashboard for the endpoints.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(rate(http_discord_requests_total{status="429"}[5m])) > 1
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-no-vc-created
+        title: No temporary VC created
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: No temporary VC created for 30 minutes
+          description: No temporary VC has been created in the last 30 minutes, while the same window yesterday had more than 20. Voice event handling may be silently broken.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(increase(astro_vc_created_total{outcome="created"}[30m])) == 0 and sum(increase(astro_vc_created_total{outcome="created"}[30m] offset 1d)) > 20
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
