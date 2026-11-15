@@ -64,8 +64,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: '{{ $labels.statefulset }} has pods not ready'
-          description: '{{ $labels.statefulset }} has {{ $values.B.Value }} pod(s) not ready for 10 minutes. Each bot pod serves a range of shards, so those guilds get no bot.'
+          summary: '{{ $labels.pod }} is not ready'
+          description: '{{ $labels.pod }} has been not ready for 10 minutes. Each bot pod serves a range of shards, so those guilds get no bot.'
         data:
           - refId: A
             relativeTimeRange:
@@ -74,7 +74,7 @@ groups:
             datasourceUid: prometheus
             model:
               refId: A
-              expr: kube_statefulset_replicas{namespace="astro",statefulset=~"bot|support-bot"} - kube_statefulset_status_replicas_ready{namespace="astro",statefulset=~"bot|support-bot"} > 0
+              expr: 1 - kube_pod_status_ready{namespace="astro",condition="true",pod=~"(bot|support-bot)-[0-9]+"} > 0
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
