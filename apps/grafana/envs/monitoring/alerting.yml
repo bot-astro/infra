@@ -3,32 +3,37 @@ templates:
   - orgId: 1
     name: astro
     template: |-
-      {{ define "astro.title" }}{{ if gt (len .Alerts.Firing) 0 }}{{ len .Alerts.Firing }} firing{{ else }}Resolved{{ end }}{{ end }}
-      {{ define "astro.message" }}{{ range .Alerts.Firing }}🔴 **{{ .Labels.alertname }}** · {{ .Annotations.summary }}
+      {{ define "astro.title" }}{{ if gt (len .Alerts.Firing) 0 }}🔴 {{ len .Alerts.Firing }} firing{{ else }}✅ Resolved{{ end }}{{ end }}
+      {{ define "astro.message" }}{{ range .Alerts.Firing }}**{{ .Labels.alertname }}** · {{ .Annotations.summary }}
       -# {{ .Annotations.description }}
-      {{ end }}{{ range .Alerts.Resolved }}✅ **{{ .Labels.alertname }}** · resolved
+      {{ end }}{{ range .Alerts.Resolved }}**{{ .Labels.alertname }}** · resolved
       {{ end }}{{ end }}
+      {{ define "astro.embeds" }}[{{ coll.Dict "title" (tmpl.Exec "astro.title" .) "description" (tmpl.Exec "astro.message" .) "color" (or (and (gt (len .Alerts.Firing) 0) 15158332) 3066993) | data.ToJSON }}]{{ end }}
+      {{ define "astro.payload" }}{"embeds": {{ template "astro.embeds" . }}}{{ end }}
+      {{ define "astro.payload.critical" }}{"content": {{ if gt (len .Alerts.Firing) 0 }}"<@&857354381498515476>"{{ else }}""{{ end }}, "embeds": {{ template "astro.embeds" . }}}{{ end }}
 contactPoints:
   - orgId: 1
     name: discord
     receivers:
       - uid: astro-discord
-        type: discord
+        type: webhook
         disableResolveMessage: false
         settings:
           url: $__env{DISCORD_WEBHOOK_URL}
-          title: '{{ template "astro.title" . }}'
-          message: '{{ template "astro.message" . }}'
+          httpMethod: POST
+          payload:
+            template: '{{ template \"astro.payload\" . }}'
   - orgId: 1
     name: discord-critical
     receivers:
       - uid: astro-discord-critical
-        type: discord
+        type: webhook
         disableResolveMessage: false
         settings:
           url: $__env{DISCORD_WEBHOOK_URL}
-          title: '{{ template "astro.title" . }}'
-          message: '{{ if gt (len .Alerts.Firing) 0 }}<@&857354381498515476> {{ end }}{{ template "astro.message" . }}'
+          httpMethod: POST
+          payload:
+            template: '{{ template \"astro.payload.critical\" . }}'
 policies:
   - orgId: 1
     receiver: discord
