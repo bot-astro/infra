@@ -1,4 +1,13 @@
 apiVersion: 1
+templates:
+  - orgId: 1
+    name: astro
+    template: |-
+      {{ define "astro.title" }}{{ if gt (len .Alerts.Firing) 0 }}{{ len .Alerts.Firing }} firing{{ else }}Resolved{{ end }}{{ end }}
+      {{ define "astro.message" }}{{ range .Alerts.Firing }}🔴 **{{ .Labels.alertname }}** · {{ .Annotations.summary }}
+      -# {{ .Annotations.description }}
+      {{ end }}{{ range .Alerts.Resolved }}✅ **{{ .Labels.alertname }}** · resolved
+      {{ end }}{{ end }}
 contactPoints:
   - orgId: 1
     name: discord
@@ -8,6 +17,8 @@ contactPoints:
         disableResolveMessage: false
         settings:
           url: $__env{DISCORD_WEBHOOK_URL}
+          title: '{{ template "astro.title" . }}'
+          message: '{{ template "astro.message" . }}'
   - orgId: 1
     name: discord-critical
     receivers:
@@ -16,7 +27,8 @@ contactPoints:
         disableResolveMessage: false
         settings:
           url: $__env{DISCORD_WEBHOOK_URL}
-          message: '{{ if gt (len .Alerts.Firing) 0 }}<@&857354381498515476> {{ end }}{{ template "default.message" . }}'
+          title: '{{ template "astro.title" . }}'
+          message: '{{ if gt (len .Alerts.Firing) 0 }}<@&857354381498515476> {{ end }}{{ template "astro.message" . }}'
 policies:
   - orgId: 1
     receiver: discord
