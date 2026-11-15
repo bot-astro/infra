@@ -1,0 +1,504 @@
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: discord
+    receivers:
+      - uid: astro-discord
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: $__env{DISCORD_WEBHOOK_URL}
+policies:
+  - orgId: 1
+    receiver: discord
+    group_by:
+      - alertname
+    group_wait: 30s
+    group_interval: 5m
+    repeat_interval: 4h
+    routes:
+      - receiver: discord
+        object_matchers:
+          - - severity
+            - =
+            - critical
+        repeat_interval: 1h
+groups:
+  - orgId: 1
+    name: astro
+    folder: Astro
+    interval: 1m
+    rules:
+      - uid: astro-statefulset-pods-down
+        title: Bot / support-bot pods not ready
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{ $labels.statefulset }} has pods not ready'
+          description: '{{ $labels.statefulset }} has {{ $values.B.Value }} pod(s) not ready for 10 minutes. Each bot pod serves a range of shards, so those guilds get no bot.'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: kube_statefulset_replicas{namespace="astro",statefulset=~"bot|support-bot"} - kube_statefulset_status_replicas_ready{namespace="astro",statefulset=~"bot|support-bot"} > 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-api-central-down
+        title: api-central down
+        condition: C
+        for: 3m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: api-central has no available replicas
+          description: No api-central replica has been available for 3 minutes.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: kube_deployment_status_replicas_available{namespace="astro",deployment="api-central"} == 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-bot-metrics-missing
+        title: Bot metrics missing
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: No bot metrics in Prometheus
+          description: 'Prometheus has received no discord_pods metric for 10 minutes: bot pods are down or the OTLP export to Prometheus is broken.'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: absent(discord_pods{job="bot"})
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-shards-unhealthy
+        title: Bot pod with unhealthy shards
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: Pod {{ $labels.pod_id }} has shards not connected
+          description: Bot pod {{ $labels.pod_id }} has had shards that are not CONNECTED for 5 minutes. The liveness probe restarts it after about 10 minutes.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: discord_pods == 1
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-gateway-ping-high
+        title: Discord gateway ping high
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: Gateway ping high on pod {{ $labels.pod_id }}
+          description: Average gateway ping of pod {{ $labels.pod_id }} has been above 500ms for 10 minutes ({{ $values.B.Value }}ms). Normal is about 100ms.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: avg by (pod_id) (discord_gateway_ping) > 500
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-unavailable-guilds
+        title: Many unavailable guilds
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $values.B.Value }} unavailable guilds'
+          description: More than 200 guilds have been reported unavailable by Discord for 10 minutes. Check https://discordstatus.com.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(discord_unavailable_guilds) > 200
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-api-5xx
+        title: api-central 5xx ratio high
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: api-central is returning 5xx
+          description: More than 5% of api-central requests failed with 5xx for 10 minutes.
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum(rate(http_server_requests_seconds_count{job="api-central",status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count{job="api-central"}[5m])) > 0.05 and sum(rate(http_server_requests_seconds_count{job="api-central"}[5m])) > 0.05
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-api-latency
+        title: api-central p95 latency high
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: api-central p95 latency above 2s
+          description: p95 latency of api-central has been above 2 seconds for 10 minutes ({{ $values.B.Value }}s).
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{job="api-central"}[5m]))) > 2 and sum(rate(http_server_requests_seconds_count{job="api-central"}[5m])) > 0.05
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-memory-high
+        title: Pod memory near limit
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $labels.pod }} memory above 90% of the limit'
+          description: '{{ $labels.pod }} has used more than 90% of its memory limit for 15 minutes, it will be OOM killed at 100%.'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max by (pod) (container_memory_working_set_bytes{namespace="astro",container!="",pod=~"bot-.*|api-central-.*|support-bot-.*"}) / on (pod) max by (pod) (kube_pod_container_resource_limits{namespace="astro",resource="memory",pod=~"bot-.*|api-central-.*|support-bot-.*"}) > 0.9
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-cpu-high
+        title: Pod CPU high
+        condition: C
+        for: 20m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $labels.pod }} CPU at more than 4x its request'
+          description: '{{ $labels.pod }} has been using more than 4x its CPU request for 20 minutes. Startup bursts are shorter than this.'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="astro",container!="",pod=~"bot-.*|api-central-.*|support-bot-.*"}[5m])) / on (pod) sum by (pod) (kube_pod_container_resource_requests{namespace="astro",resource="cpu",pod=~"bot-.*|api-central-.*|support-bot-.*"}) > 4
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
+      - uid: astro-container-restarts
+        title: Container restarted
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $labels.pod }} restarted'
+          description: Container {{ $labels.container }} of {{ $labels.pod }} restarted in the last 10 minutes (crash, OOM kill or failed liveness probe).
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: increase(kube_pod_container_status_restarts_total{namespace="astro",pod=~"bot-.*|api-central-.*|support-bot-.*"}[10m]) > 0
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: reduce
+              expression: A
+              reducer: last
+              settings:
+                mode: dropNN
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 0
