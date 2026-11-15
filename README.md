@@ -32,6 +32,28 @@ The few secrets needed to bootstrap cannot be commited to git, for this reason I
 #### terraform
 Cloudflare (R2, CDN, DNS) and BigQuery are managed in the [terraform](terraform) folder, see the README in there.
 
+#### monitoring (Grafana dashboards and alerts)
+Prometheus and Grafana come from kube-prometheus-stack, installed by [gport](https://github.com/Giuliopime/gport). The dashboards and the alerting rules live in `apps/grafana/envs/monitoring` and are loaded by the Grafana sidecars:
+- `dashboards/*.json`: Overview, Bot (Discord), Resources (Kubernetes + JVM). Each ends up in a ConfigMap labelled `grafana_dashboard`
+- `alerting.yml`: contact point, notification policy and alert rules, in a ConfigMap labelled `grafana_alert`
+- `infisical-secret.yml`: syncs `DISCORD_WEBHOOK_URL` from Infisical (project of the bot, `prod`, folder `/monitoring`) into the `grafana-alerting` Secret of the `monitoring` namespace
+
+Needed once, in the gport values of kube-prometheus-stack:
+```yaml
+grafana:
+  envFromSecrets:
+    - name: grafana-alerting
+      optional: true
+  sidecar:
+    alerts:
+      enabled: true
+      label: grafana_alert
+      labelValue: "1"
+      searchNamespace: ALL
+```
+Create the webhook in Discord (channel settings -> Integrations -> Webhooks) and save its URL as `DISCORD_WEBHOOK_URL` in Infisical, folder `/monitoring`.  
+Dashboards are provisioned, so edit the JSON files instead of the UI (changes made in the UI are not saved).
+
 
 ## Technical notes
 
