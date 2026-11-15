@@ -8,6 +8,15 @@ contactPoints:
         disableResolveMessage: false
         settings:
           url: $__env{DISCORD_WEBHOOK_URL}
+  - orgId: 1
+    name: discord-critical
+    receivers:
+      - uid: astro-discord-critical
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: $__env{DISCORD_WEBHOOK_URL}
+          message: '{{ if gt (len .Alerts.Firing) 0 }}<@&857354381498515476> {{ end }}{{ template "default.message" . }}'
 policies:
   - orgId: 1
     receiver: discord
@@ -17,7 +26,7 @@ policies:
     group_interval: 5m
     repeat_interval: 4h
     routes:
-      - receiver: discord
+      - receiver: discord-critical
         object_matchers:
           - - severity
             - =
