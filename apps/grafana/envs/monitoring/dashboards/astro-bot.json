@@ -365,6 +365,53 @@
       }
     },
     {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Total guilds",
+      "description": "Guilds the bot is in, summed over all pods. Prometheus keeps 10 days of data, so a longer time range shows nothing before that.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 8
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS}"
+          },
+          "refId": "A",
+          "expr": "sum(discord_guilds)",
+          "legendFormat": "guilds"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 1,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      }
+    },
+    {
       "id": 8,
       "type": "timeseries",
       "title": "Guilds per pod",
@@ -375,7 +422,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 5,
+        "y": 13,
         "w": 12,
         "h": 8
       },
@@ -423,7 +470,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 5,
+        "y": 13,
         "w": 12,
         "h": 8
       },
@@ -471,7 +518,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 21,
         "w": 12,
         "h": 8
       },
@@ -528,7 +575,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 13,
+        "y": 21,
         "w": 12,
         "h": 8
       },
@@ -572,7 +619,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 21,
+        "y": 29,
         "w": 24,
         "h": 1
       },
@@ -589,7 +636,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 22,
+        "y": 30,
         "w": 12,
         "h": 8
       },
@@ -639,7 +686,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 22,
+        "y": 30,
         "w": 12,
         "h": 8
       },
