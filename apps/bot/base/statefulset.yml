@@ -60,9 +60,9 @@ spec:
               path: /actuator/health/readiness
               port: 9100
             timeoutSeconds: 30
-            initialDelaySeconds: 120
-            periodSeconds: 20
-            failureThreshold: 120
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            failureThreshold: 480
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
