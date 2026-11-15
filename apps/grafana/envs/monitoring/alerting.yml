@@ -22,7 +22,7 @@ contactPoints:
           url: $__env{DISCORD_WEBHOOK_URL}
           httpMethod: POST
           payload:
-            template: '{{ template \"astro.payload\" . }}'
+            template: '{{ template "astro.payload" . }}'
   - orgId: 1
     name: discord-critical
     receivers:
@@ -33,7 +33,7 @@ contactPoints:
           url: $__env{DISCORD_WEBHOOK_URL}
           httpMethod: POST
           payload:
-            template: '{{ template \"astro.payload.critical\" . }}'
+            template: '{{ template "astro.payload.critical" . }}'
 policies:
   - orgId: 1
     receiver: discord
