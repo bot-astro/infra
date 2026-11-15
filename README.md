@@ -34,7 +34,7 @@ Cloudflare (R2, CDN, DNS) and BigQuery are managed in the [terraform](terraform)
 
 #### monitoring (Grafana dashboards and alerts)
 Prometheus and Grafana come from kube-prometheus-stack, installed by [gport](https://github.com/Giuliopime/gport). The dashboards and the alerting rules live in `apps/grafana/envs/monitoring` and are loaded by the Grafana sidecars:
-- `dashboards/*.json`: Overview, Bot (Discord), Resources (Kubernetes + JVM). Each ends up in a ConfigMap labelled `grafana_dashboard`
+- `dashboards/*.json`: Overview, Bot (Discord), Voice (temporary VCs), Resources (Kubernetes + JVM). Each ends up in a ConfigMap labelled `grafana_dashboard`
 - `alerting.yml`: contact point, notification policy and alert rules, in a ConfigMap labelled `grafana_alert`
 - `infisical-secret.yml`: syncs `DISCORD_WEBHOOK_URL` from Infisical (project of the bot, `prod`, folder `/monitoring`) into the `grafana-alerting` Secret of the `monitoring` namespace
 
