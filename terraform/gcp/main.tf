@@ -77,6 +77,22 @@ locals {
       { name = "action", type = "STRING" }, # JOINED | KICKED
       { name = "timestamp", type = "TIMESTAMP" },
     ]
+    # code is a ConfigurationErrorCode name, PREMIUM_* codes are the premium gates
+    CONFIGURATION_ERROR = [
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "code", type = "STRING" },
+      { name = "timestamp", type = "TIMESTAMP" },
+    ]
+    # written once a day for every guild the bot is in
+    GUILD_CONFIG_SNAPSHOT = [
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "premium", type = "BOOLEAN" },
+      { name = "generators", type = "INTEGER" },
+      { name = "interfaces", type = "INTEGER" },
+      { name = "connections", type = "INTEGER" },
+      { name = "templates", type = "INTEGER" },
+      { name = "timestamp", type = "TIMESTAMP" },
+    ]
     # legacy table, the new bot does not write it, kept because prod has it (and its data)
     GUILD_SNAPSHOT = [
       { name = "guild_id", type = "NUMERIC" },
@@ -88,7 +104,8 @@ locals {
   }
 
   clustering = {
-    GUILD_SNAPSHOT = ["guild_id"]
+    GUILD_SNAPSHOT        = ["guild_id"]
+    GUILD_CONFIG_SNAPSHOT = ["guild_id"]
   }
 
   env_tables = merge([
