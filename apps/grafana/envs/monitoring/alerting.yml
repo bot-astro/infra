@@ -537,8 +537,8 @@ groups:
         labels:
           severity: critical
         annotations:
-          summary: Temporary VC creation is failing
-          description: More than 5% of the temporary VC creations failed with an unexpected error for 10 minutes ({{ $values.B.Value }}). Guilds are not getting their channels.
+          summary: Temporary VC creation is failing on pod {{ $labels.pod_id }}
+          description: More than 20% of the temporary VC creations of bot pod {{ $labels.pod_id }} failed with an unexpected error for 10 minutes ({{ $values.B.Value }}). Guilds served by this pod are not getting their channels.
         data:
           - refId: A
             relativeTimeRange:
@@ -547,7 +547,7 @@ groups:
             datasourceUid: prometheus
             model:
               refId: A
-              expr: sum(increase(astro_vc_created_total{outcome="failed"}[10m])) / sum(increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 0.05 and sum(increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 20
+              expr: sum by (pod_id) (increase(astro_vc_created_total{outcome="failed"}[10m])) / sum by (pod_id) (increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 0.2 and sum by (pod_id) (increase(astro_vc_created_total{outcome=~"created|failed"}[10m])) > 10
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
@@ -581,16 +581,16 @@ groups:
           severity: warning
         annotations:
           summary: Temporary VC creation p95 above 5s
-          description: p95 of the temporary VC creation time has been above 5 seconds for 10 minutes ({{ $values.B.Value }}s). Usually Discord API latency or rate limits.
+          description: p95 of the temporary VC creation time over the last 30 minutes has been above 5 seconds for 10 minutes ({{ $values.B.Value }}s). Usually Discord API latency or rate limits.
         data:
           - refId: A
             relativeTimeRange:
-              from: 600
+              from: 1800
               to: 0
             datasourceUid: prometheus
             model:
               refId: A
-              expr: histogram_quantile(0.95, sum by (le) (rate(astro_vc_create_duration_seconds_bucket[5m]))) > 5 and sum(rate(astro_vc_created_total{outcome="created"}[5m])) > 0.02
+              expr: histogram_quantile(0.95, sum by (le) (rate(astro_vc_create_duration_seconds_bucket[30m]))) > 5 and sum(rate(astro_vc_created_total{outcome="created"}[30m])) > 0.02
               instant: true
               intervalMs: 1000
               maxDataPoints: 43200
