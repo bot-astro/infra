@@ -6,9 +6,11 @@ metadata:
     app: entitlements-expiration-job
 spec:
   schedule: "0 1 * * *"
+  failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
       backoffLimit: 4
+      ttlSecondsAfterFinished: 259200
       template:
         spec:
           nodeSelector:
