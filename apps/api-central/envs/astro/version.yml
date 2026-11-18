@@ -7,4 +7,4 @@ spec:
     spec:
       containers:
         - name: api-central
-          image: ghcr.io/bot-astro/api-central:8a7fcd447f6928f181ba17cb569a72706b10e3eb
+          image: ghcr.io/bot-astro/api-central:c4e28790da15d582c8adeb1c901127e38c73a276
