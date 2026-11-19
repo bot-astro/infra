@@ -14,7 +14,7 @@ variable "cloudflare_zone_id" {
 }
 
 variable "ingress_ipv4" {
-  description = "Public IPv4 of the cluster ingress (gport output: module.kube-hetzner.ingress_public_ipv4)"
+  description = "Public IPv4 of the Traefik load balancer (gport output: ingress_public_ipv4)"
   type        = string
 }
 
