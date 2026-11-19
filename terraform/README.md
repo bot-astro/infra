@@ -5,7 +5,7 @@ Two independent root modules, each with its own state in the R2 bucket `astro-te
 | Module | Manages |
 |---|---|
 | `cloudflare/` | R2 buckets (`astro-media-prod`, `astro-media-staging`) + custom domains + per-env API tokens, DNS records for the apps. Writes `R2_*` secrets to Infisical |
-| `gcp/` | BigQuery datasets + tables, service accounts. Prod is the pre-existing `astro_bot` dataset (project `astro-405113`), the data was adopted in place (tables have `deletion_protection` + `prevent_destroy`). Writes `BOT__BIGQUERY_DATASET_NAME` and `BOT__GCP_CREDENTIALS_JSON` to Infisical |
+| `gcp/` | BigQuery datasets + tables, service accounts. Prod is the pre-existing `astro_bot` dataset (project `astro-405113`), the data was adopted in place (tables have `deletion_protection` + `prevent_destroy`). Writes `BOT__BIGQUERY_DATASET_NAME`, `BOT__GCP_CREDENTIALS_JSON` and the api-central equivalents (`CA__BIGQUERY_ENABLED`, `CA__BIGQUERY_DATASET_NAME`, `CA__GCP_CREDENTIALS_JSON`, its own service account) to Infisical |
 
 ## Usage
 1. Once, by hand: create the R2 bucket `astro-terraform-state` and an R2 API token (object read/write on it).
