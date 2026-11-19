@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: api-central
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: astro-staging-api-central-body-limit@kubernetescrd
 spec:
   tls:
     - hosts:
