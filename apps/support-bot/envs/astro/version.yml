@@ -7,4 +7,4 @@ spec:
     spec:
       containers:
         - name: support-bot
-          image: ghcr.io/bot-astro/support-bot:c4e28790da15d582c8adeb1c901127e38c73a276
+          image: ghcr.io/bot-astro/support-bot:0dfac381e6389e4d1450c0702da0a2aeeb5eee75
