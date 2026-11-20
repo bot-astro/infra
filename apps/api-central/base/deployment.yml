@@ -48,6 +48,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/astro-api-central/secrets/key.json
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
@@ -71,3 +73,14 @@ spec:
             initialDelaySeconds: 1
             periodSeconds: 5
             failureThreshold: 10
+          volumeMounts:
+            - name: gcp-bigquery-creds
+              mountPath: /etc/astro-api-central/secrets
+              readOnly: true
+      volumes:
+        - name: gcp-bigquery-creds
+          secret:
+            secretName: api-central-config
+            items:
+              - key: CA__GCP_CREDENTIALS_JSON
+                path: key.json

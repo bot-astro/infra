@@ -74,7 +74,16 @@ locals {
     GUILD_EVENT = [
       { name = "guild_id", type = "NUMERIC" },
       { name = "users_count", type = "INTEGER" },
-      { name = "action", type = "STRING" }, # JOINED | KICKED
+      { name = "locale", type = "STRING", mode = "NULLABLE" }, # preferred locale of the guild
+      { name = "action", type = "STRING" },                    # JOINED | KICKED
+      { name = "timestamp", type = "TIMESTAMP" },
+    ]
+    # written by api-central when the bot is added through a website invite, source is the free label of the invite link
+    # (installs that don't pass through the website have no row), user_id is the inviter
+    INSTALL_EVENT = [
+      { name = "source", type = "STRING" },
+      { name = "guild_id", type = "NUMERIC" },
+      { name = "user_id", type = "NUMERIC", mode = "NULLABLE" },
       { name = "timestamp", type = "TIMESTAMP" },
     ]
     # code is a ConfigurationErrorCode name, PREMIUM_* codes are the premium gates
@@ -182,12 +191,46 @@ resource "google_service_account_key" "bot" {
   service_account_id = google_service_account.bot[each.key].name
 }
 
+resource "google_service_account" "api_central" {
+  for_each = local.envs
+
+  account_id   = "astro-api-central-${each.key}"
+  display_name = "Astro api-central (${each.key})"
+}
+
+resource "google_bigquery_dataset_iam_member" "api_central_data_editor" {
+  for_each = local.envs
+
+  dataset_id = each.value.dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:${google_service_account.api_central[each.key].email}"
+}
+
+resource "google_project_iam_member" "api_central_job_user" {
+  for_each = local.envs
+
+  project = var.gcp_project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.api_central[each.key].email}"
+}
+
+resource "google_service_account_key" "api_central" {
+  for_each = local.envs
+
+  service_account_id = google_service_account.api_central[each.key].name
+}
+
 locals {
   secrets = merge([
     for env, cfg in local.envs : {
       "${env}/BOT__BIGQUERY_DATASET_NAME" = { env = cfg.infisical_env, name = "BOT__BIGQUERY_DATASET_NAME", value = cfg.dataset_id }
       # service account key, mounted as a file by the bot (GOOGLE_APPLICATION_CREDENTIALS)
       "${env}/BOT__GCP_CREDENTIALS_JSON" = { env = cfg.infisical_env, name = "BOT__GCP_CREDENTIALS_JSON", value = base64decode(google_service_account_key.bot[env].private_key) }
+
+      # api-central records the install source of the website invites
+      "${env}/CA__BIGQUERY_ENABLED"      = { env = cfg.infisical_env, name = "CA__BIGQUERY_ENABLED", value = "true" }
+      "${env}/CA__BIGQUERY_DATASET_NAME" = { env = cfg.infisical_env, name = "CA__BIGQUERY_DATASET_NAME", value = cfg.dataset_id }
+      "${env}/CA__GCP_CREDENTIALS_JSON"  = { env = cfg.infisical_env, name = "CA__GCP_CREDENTIALS_JSON", value = base64decode(google_service_account_key.api_central[env].private_key) }
     }
   ]...)
 }
