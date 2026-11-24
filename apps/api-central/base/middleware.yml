@@ -1,0 +1,8 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: api-central-body-limit
+spec:
+  buffering:
+    # traefik has no default body limit, the api accepts media uploads up to 5MB (10MB request)
+    maxRequestBodyBytes: 10485760
