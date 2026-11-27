@@ -171,7 +171,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "none",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -180,7 +180,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "decimals": 0
         },
         "overrides": []
       },
