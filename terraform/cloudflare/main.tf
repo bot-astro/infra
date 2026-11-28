@@ -44,7 +44,7 @@ locals {
     prod = {
       infisical_env = "prod"
       cdn_domain    = "cdn.astro-bot.space"
-      hosts         = ["api", "support-bot"]
+      hosts         = ["api", "support-bot", "mcp"]
     }
     staging = {
       infisical_env = "staging"

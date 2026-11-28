@@ -43,6 +43,14 @@ configMapGenerator:
         grafana_dashboard: "1"
       annotations:
         grafana_folder: Astro
+  - name: grafana-dashboard-astro-mcp-server
+    files:
+      - dashboards/astro-mcp-server.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: Astro
   - name: grafana-alerting-astro
     files:
       - alerting.yml
