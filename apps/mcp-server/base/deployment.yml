@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  labels:
+    app: mcp-server
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      nodeSelector:
+        gport.giuliopime.dev/agent: as-cruiser
+      imagePullSecrets:
+        - name: docker-registry
+      # open Streamable HTTP (SSE) streams are closed on SIGTERM, in-flight tool calls get time to finish
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: mcp-server
+          image: ghcr.io/bot-astro/mcp-server:latest
+          ports:
+            - name: http
+              containerPort: 9002
+            - name: management
+              containerPort: 9102
+          envFrom:
+            - secretRef:
+                name: mcp-server-config
+          env:
+            - name: MCP_PORT
+              value: "9002"
+            - name: MCP_MANAGEMENT_PORT
+              value: "9102"
+            - name: API_CENTRAL_URL
+              value: http://api-central.astro.svc:9001
+            # Prometheus (kube-prometheus-stack) OTLP receiver, the app appends /v1/metrics
+            - name: OTEL_ENDPOINT
+              value: http://kube-prometheus-stack-prometheus.monitoring:9090/api/v1/otlp
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 9102
+            timeoutSeconds: 5
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 9102
+            timeoutSeconds: 5
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            failureThreshold: 20
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9102
+            timeoutSeconds: 5
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            failureThreshold: 10
